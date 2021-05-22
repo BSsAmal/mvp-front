@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import useStyles from "./style";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
-import { useDispatch } from "react-redux";
-
+import { useDispatch, useSelector } from "react-redux";
 //get the function create a post from the action of redux and dispatch it in the handleSubmit so i am mading this request when the button is clicked
-import { createPost } from "../../actions/posts";
+import { createPost, updatePost } from "../../actions/posts";
 
-const Form = () => {
+const Form = ({ currentId, setCurrentId }) => {
   const [postData, setPostData] = useState({
     title: "",
     description: "",
@@ -17,12 +16,39 @@ const Form = () => {
     image: "",
   });
 
+  //fetch the selected Post by id and modify it so if it exist it will return the Post with his current values
+  //i useed the  method  to search  the post with his Id
+  const post = useSelector((state) =>
+    currentId ? state.posts.find((post) => post._id === currentId) : null
+  );
+
   const classes = useStyles();
   const dispatch = useDispatch();
 
+  //seEffect to populate the populate the value of the form with the post that we want to update
+
+  useEffect(() => {
+    if (post) setPostData(post);
+  }, [post]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    dispatch(createPost(postData));
+    // Dispatch the Post with the updatePost. if we don't have a current id it means we are creating a new Post
+    if (currentId) {
+      dispatch(updatePost(currentId, postData));
+    } else dispatch(createPost(postData));
+    clear()
+  };
+
+  // clear the form
+  const clear = () => {
+    setCurrentId(null);
+    setPostData({
+      title: "",
+      description: "",
+      owner: "",
+      image: "",
+    });
   };
   return (
     <Paper className={classes.paper}>
@@ -77,8 +103,19 @@ const Form = () => {
           variant="contained"
           color="primary"
           size="large"
-          type="submit fullWidth">
+          type="submit"
+          fullWidth>
           SUBMIT
+        </Button>
+
+        <Button
+          variant="contained"
+          color="secondary"
+          size="small"
+          type="submit"
+          fullWidth
+          onClick={clear}>
+          clear
         </Button>
       </form>
     </Paper>
